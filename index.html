@@ -7,48 +7,102 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      max-width: 600px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 700px;
       margin: 30px auto;
       padding: 20px;
+      background-color: #f4f6f8;
+      color: #333;
     }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      background: linear-gradient(90deg, #4e73df, #1cc88a);
+      color: white;
+      padding: 20px 10px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      margin-bottom: 25px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100px;
+      height: 100px;
+      background: white;
+      color: #0e0e0f;
+      font-weight: bold;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      text-align: center;
+      line-height: 50px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2em;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+
     label { display: block; margin-top: 10px; }
-    input, select { width: 100%; padding: 8px; margin-top: 5px; }
-    button { margin-top: 15px; padding: 10px 15px; cursor: pointer; }
-    #results { margin-top: 20px; white-space: pre-line; }
+    input, select { width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; }
+    button { margin-top: 15px; padding: 10px 15px; cursor: pointer; border-radius: 5px; border: none; background-color: #4e73df; color: white; font-weight: bold; }
+    button:hover { background-color: #2e59d9; }
 
-    /* Desktop graph styling */
-    canvas {
-      margin-top: 25px;
-      width: 100% !important;
-      height: 350px !important;
+    #results, #details {
+      margin-top: 20px;
+      white-space: pre-line;
+      padding: 15px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      line-height: 1.6;
     }
 
-    /* Improved mobile graph styling */
+    #details {
+      border-left: 4px solid #1cc88a;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.95em;
+      background-color: #f9f9f9;
+    }
+
+    canvas { margin-top: 25px; width: 100% !important; height: 350px !important; }
+
+    footer {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 0.9em;
+      color: #666;
+    }
+
     @media (max-width: 600px) {
       body { padding: 15px; }
       button { width: 100%; }
-
-      canvas {
-        height: 250px !important; /* shorter graph for small screens */
-        margin-top: 20px;
-      }
-
-      /* Make labels more readable on mobile */
-      .chartjs-size-monitor, .chartjs-render-monitor {
-        font-size: 14px !important;
-      }
+      canvas { height: 250px !important; margin-top: 20px; }
+      .chartjs-size-monitor, .chartjs-render-monitor { font-size: 14px !important; }
+      header { flex-direction: column; gap: 10px; }
     }
 
     @media (max-width: 400px) {
-      canvas {
-        height: 220px !important; /* even smaller for very small phones */
-      }
+      canvas { height: 220px !important; }
+      header h1 { font-size: 1.5em; }
+      .logo { width: 40px; height: 40px; font-size: 16px; line-height: 40px; }
     }
   </style>
 </head>
 <body>
-  <h2>Slope Calculator</h2>
+  <header>
+    <div class="logo">4MAN</div>
+    <h1>Slope Calculator</h1>
+  </header>
 
   <label>Units:</label>
   <select id="units">
@@ -75,8 +129,13 @@
   <button onclick="resetForm()">New / Reset</button>
 
   <div id="results"></div>
+  <div id="details"></div>
 
   <canvas id="graphCanvas"></canvas>
+
+  <footer>
+    &copy; 2025 Hugo Hernandez. All rights reserved.
+  </footer>
 
   <script>
     let chart;
@@ -105,15 +164,27 @@
       else if (slope < 0) direction = 'Downhill';
 
       document.getElementById('results').textContent =
-        `Direction: ${direction}
-` +
-        `Slope (decimal): ${slope.toFixed(4)}
-` +
-        `Slope (%): ${slopePercent.toFixed(2)}%
-` +
+        `Direction: ${direction}\n` +
+        `Slope (decimal): ${slope.toFixed(4)}\n` +
+        `Slope (%): ${slopePercent.toFixed(2)}%\n` +
         `Units: ${unit}`;
 
+      displayDetails(elev1, elev2, dist, slope, unit, interval);
       drawGraph(elev1, elev2, dist, slope, slopePercent, unit, interval);
+    }
+
+    function displayDetails(elev1, elev2, dist, slope, unit, interval) {
+      let html = 'Elevation and local slope at each interval:\n';
+      const numPoints = Math.floor(dist / interval);
+      for (let i = 0; i <= numPoints; i++) {
+        const x = i * interval;
+        const y = elev1 + slope * x;
+        html += `Distance: ${x} ${unit} | Elevation: ${y.toFixed(2)} ${unit} | Local Slope: ${slope.toFixed(4)}\n`;
+      }
+      if (numPoints * interval !== dist) {
+        html += `Distance: ${dist} ${unit} | Elevation: ${elev2.toFixed(2)} ${unit} | Local Slope: ${slope.toFixed(4)}\n`;
+      }
+      document.getElementById('details').textContent = html;
     }
 
     function drawGraph(elev1, elev2, dist, slope, slopePercent, unit, interval) {
@@ -149,32 +220,9 @@
         },
         options: {
           responsive: true,
-          plugins: {
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  return `Elevation: ${context.parsed.y.toFixed(2)} ${unit}`;
-                },
-                footer: function(context) {
-                  const x = context[0].parsed.x;
-                  return `Distance from start: ${x} ${unit}`;
-                }
-              }
-            }
-          },
           scales: {
-            x: {
-              title: {
-                display: true,
-                text: `Distance (${unit}) — horizontal separation`
-              }
-            },
-            y: {
-              title: {
-                display: true,
-                text: `Elevation (${unit})`
-              }
-            }
+            x: { title: { display: true, text: `Distance (${unit}) — horizontal separation` } },
+            y: { title: { display: true, text: `Elevation (${unit})` } }
           }
         }
       });
@@ -185,6 +233,7 @@
       document.getElementById('elev2').value = '';
       document.getElementById('dist').value = '';
       document.getElementById('results').textContent = '';
+      document.getElementById('details').textContent = '';
       document.getElementById('units').value = 'Feet';
       document.getElementById('intervalSelect').value = '14';
       if (chart) chart.destroy();
